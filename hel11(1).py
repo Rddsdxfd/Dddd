@@ -33,12 +33,13 @@ class TextTransform:
 def calculate_seq_len(input_lengths):
     return (input_lengths - 3) // 2 + 1
 
-BATCH_SIZE= 300
+BATCH_SIZE = 215
 SAMPLE_RATE = 16000
 HOP_LENGTH = 160
 NUM_MELS = 80
-EMBEDDING_SIZE = 256
-NUM_EPOCHS = 50
+EMBEDDING_SIZE = 145
+NUM_EPOCHS = 100
+LEARNING_RATE = 0.003
 
 DATASET_PATH = '/content/drive/MyDrive/cc/c'
 MODEL_SAVE_PATH = '/content/drive/MyDrive/m.pt'
@@ -103,7 +104,7 @@ class SpeechToTextRCNN(nn.Module):
         self.bn2 = nn.BatchNorm1d(hidden_size)
         self.lstm = nn.LSTM(hidden_size, hidden_size, num_layers=1, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
-        self.dropout = nn.Dropout(p=0.5)  # Adding dropout with probability 0.5
+        self.dropout = nn.Dropout(p=0.3)  # Adding dropout with probability 0.5
 
     def forward(self, x):
         x = x.squeeze(1).transpose(1, 2)
@@ -144,9 +145,9 @@ def prepare_datasets(dataset_path, batch_size=BATCH_SIZE):
     train_dataloader, val_dataloader, output_size = prepare_datasets_helper(dataset_path, batch_size)
     return train_dataloader, val_dataloader, output_size
 
-def train_model(model, train_dataloader, val_dataloader, num_epochs=NUM_EPOCHS):
+def train_model(model, train_dataloader, val_dataloader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RATE):
     model = model.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
     criterion = nn.CTCLoss(blank=0, zero_infinity=True).to(device)
 
