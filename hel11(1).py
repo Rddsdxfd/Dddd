@@ -33,13 +33,13 @@ class TextTransform:
 def calculate_seq_len(input_lengths):
     return (input_lengths - 3) // 2 + 1
 
-BATCH_SIZE = 215
+BATCH_SIZE = 64
 SAMPLE_RATE = 16000
 HOP_LENGTH = 160
-NUM_MELS = 80
-EMBEDDING_SIZE = 145
-NUM_EPOCHS = 100
-LEARNING_RATE = 0.003
+NUM_MELS = 160
+EMBEDDING_SIZE = 512
+NUM_EPOCHS = 50
+LEARNING_RATE = 0.001
 
 DATASET_PATH = '/content/drive/MyDrive/cc/c'
 MODEL_SAVE_PATH = '/content/drive/MyDrive/m.pt'
@@ -47,13 +47,13 @@ MODEL_SAVE_PATH = '/content/drive/MyDrive/m.pt'
 text_transform = TextTransform()
 
 class SpeechDataset(Dataset):
-    MAX_INPUT_LENGTH = 80
+    MAX_INPUT_LENGTH = 160
 
     def __init__(self, file_paths, transcriptions, text_transform):
         self.file_paths = [path for path in file_paths if os.path.exists(path)]
         self.transcriptions = [transcriptions[i] for i, path in enumerate(file_paths) if os.path.exists(path)]
         self.text_transform = text_transform
-        self.mel_spectrogram_transform = MelSpectrogram(SAMPLE_RATE, n_fft=800, hop_length=160, n_mels=80)
+        self.mel_spectrogram_transform = MelSpectrogram(SAMPLE_RATE, n_fft=800, hop_length=160, n_mels=160)
 
     def __len__(self):
         return len(self.file_paths)
@@ -104,7 +104,7 @@ class SpeechToTextRCNN(nn.Module):
         self.bn2 = nn.BatchNorm1d(hidden_size)
         self.lstm = nn.LSTM(hidden_size, hidden_size, num_layers=1, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
-        self.dropout = nn.Dropout(p=0.3)  # Adding dropout with probability 0.5
+        self.dropout = nn.Dropout(p=0.5)  # Adding dropout with probability 0.5
 
     def forward(self, x):
         x = x.squeeze(1).transpose(1, 2)
@@ -246,3 +246,4 @@ print(f"Number of batches in validation DataLoader: {len(val_dataloader)}")
 
 print("Inspecting model outputs during inference:")
 infer(trained_model, val_dataloader, text_transform)
+                         
